@@ -36,10 +36,13 @@ def create_video():
     t1 = boy_dur
     t2 = boy_dur + girl_dur
 
+    n1 = int(t1 * fps)
+    n2 = int(t2 * fps)
+
     filter_complex = (
         f"[0:v]scale=1600:2844,"
         f"zoompan=z='1.15+0.03*sin(2*PI*on/25)':"
-        f"x='if(lte(t,{t1}),0,if(lte(t,{t2}),iw-iw/zoom,(iw-iw/zoom)/2))':"
+        f"x='if(lte(on,{n1}),0,if(lte(on,{n2}),iw-iw/zoom,(iw-iw/zoom)/2))':"
         f"y='(ih-ih/zoom)/2':d=1:s=1080x1920:fps={fps}[zoomed];"
         f"[zoomed]drawtext=text='{boy_text}':fontcolor=white:fontsize=58:"
         f"box=1:boxcolor=black@0.5:boxborderw=18:x=(w-text_w)/2:y=h*0.8:"
