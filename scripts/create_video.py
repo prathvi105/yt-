@@ -1,6 +1,6 @@
 """
-Step 4: Combine image + voice + captions into final reel using ffmpeg.
-Output: assets/final_video.mp4
+Step 4: Assemble video - zoom on boy while he talks, zoom on girl while she talks,
+then zoom out to full duo shot. Adds motion + focus-based "who's talking" feel.
 """
 import json, subprocess
 
@@ -18,30 +18,36 @@ def create_video():
 
     boy_dur = get_audio_duration("assets/boy.mp3")
     girl_dur = get_audio_duration("assets/girl.mp3")
-    total_dur = boy_dur + girl_dur + 1.0  # 1s gap
+    hold_dur = 2.0
+    total_dur = boy_dur + girl_dur + hold_dur
 
-    # Concat audio with a small silence gap
     subprocess.run([
         "ffmpeg", "-y",
         "-i", "assets/boy.mp3", "-i", "assets/girl.mp3",
-        "-filter_complex",
-        "[0:a]apad=pad_dur=0.5[a0];[a0][1:a]concat=n=2:v=0:a=1[aout]",
+        "-filter_complex", "[0:a][1:a]concat=n=2:v=0:a=1[aout]",
         "-map", "[aout]", "assets/combined_audio.mp3"
     ], check=True, capture_output=True)
 
     boy_text = content["boy_line"].replace("'", "\u2019").replace(":", "\\:")
     girl_text = content["girl_line"].replace("'", "\u2019").replace(":", "\\:")
+    fps = 25
+    total_frames = int(total_dur * fps)
 
-    # Ken Burns zoom + timed captions (drawtext) burned onto 1080x1920 vertical video
+    # zoompan: zoom into left half (boy) during boy_dur, right half (girl) during girl_dur,
+    # then zoom out to full frame for the hold at the end
     filter_complex = (
-        f"[0:v]scale=1200:2134,zoompan=z='min(zoom+0.0008,1.15)':d={int(total_dur*25)}:"
-        f"s=1080x1920:fps=25[zoomed];"
-        f"[zoomed]drawtext=text='{boy_text}':fontcolor=white:fontsize=64:"
-        f"box=1:boxcolor=black@0.45:boxborderw=20:x=(w-text_w)/2:y=h*0.78:"
+        f"[0:v]scale=1600:2844,"
+        f"zoompan=z='if(lte(on,{int(boy_dur*fps)}),1.4,"
+        f"if(lte(on,{int((boy_dur+girl_dur)*fps)}),1.4,1.0))':"
+        f"x='if(lte(on,{int(boy_dur*fps)}),0,"
+        f"if(lte(on,{int((boy_dur+girl_dur)*fps)}),iw-iw/zoom,(iw-iw/zoom)/2))':"
+        f"y='(ih-ih/zoom)/2':d=1:s=1080x1920:fps={fps}[zoomed];"
+        f"[zoomed]drawtext=text='{boy_text}':fontcolor=white:fontsize=60:"
+        f"box=1:boxcolor=black@0.5:boxborderw=18:x=(w-text_w)/2:y=h*0.8:"
         f"enable='between(t,0,{boy_dur+0.3})',"
-        f"drawtext=text='{girl_text}':fontcolor=white:fontsize=64:"
-        f"box=1:boxcolor=black@0.45:boxborderw=20:x=(w-text_w)/2:y=h*0.78:"
-        f"enable='gte(t,{boy_dur+0.5})'"
+        f"drawtext=text='{girl_text}':fontcolor=white:fontsize=60:"
+        f"box=1:boxcolor=black@0.5:boxborderw=18:x=(w-text_w)/2:y=h*0.8:"
+        f"enable='gte(t,{boy_dur+0.2})'"
     )
 
     subprocess.run([
@@ -55,7 +61,7 @@ def create_video():
         "assets/final_video.mp4"
     ], check=True, capture_output=True)
 
-    print("Final video ready: assets/final_video.mp4")
+    print("Final video ready:", total_dur, "seconds")
 
 if __name__ == "__main__":
     create_video()
