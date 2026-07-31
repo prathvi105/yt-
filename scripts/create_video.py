@@ -1,3 +1,6 @@
+"""
+Step 4: Assemble video with breathing zoom motion + boy/girl focus pan + laugh ending.
+"""
 import json, subprocess
 
 def get_dur(path):
@@ -16,7 +19,7 @@ def create_video():
     laugh_dur = get_dur("assets/laugh.mp3")
     total_dur = boy_dur + girl_dur + laugh_dur + 1.5
 
-  subprocess.run([
+    subprocess.run([
         "ffmpeg", "-y",
         "-i", "assets/boy.mp3", "-i", "assets/girl.mp3", "-i", "assets/laugh.mp3",
         "-filter_complex", "[0:a][1:a][2:a]concat=n=3:v=0:a=1[aout]",
@@ -30,11 +33,9 @@ def create_video():
     boy_text = escape(content["boy_line"])
     girl_text = escape(content["girl_line"])
     fps = 25
-    t1 = boy_dur           # boy talking window
-    t2 = boy_dur + girl_dur  # girl talking window ends
+    t1 = boy_dur
+    t2 = boy_dur + girl_dur
 
-    # breathing zoom (sine wave pulsing) = looks "alive" even on a static image,
-    # plus pan left(boy)->right(girl)->center(both) for a simple "who's talking" motion
     filter_complex = (
         f"[0:v]scale=1600:2844,"
         f"zoompan=z='1.15+0.03*sin(2*PI*on/25)':"
