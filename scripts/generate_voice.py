@@ -10,7 +10,7 @@ GIRL_VOICE = "hi-IN-SwaraNeural"
 async def tts(text, voice, out_path, pitch):
     communicate = edge_tts.Communicate(
         text, voice,
-        rate="-10%",      # slightly slower = clearer
+        rate="-20%",      # slightly slower = clearer
         pitch=pitch,       # native pitch shift, no artifacts
     )
     await communicate.save(out_path)
@@ -19,7 +19,7 @@ def generate_voice():
     with open("assets/content.json", encoding="utf-8") as f:
         content = json.load(f)
 
-    asyncio.run(tts(content["boy_line"], BOY_VOICE, "assets/boy.mp3", pitch="+30Hz"))
+    asyncio.run(tts(content["boy_line"], BOY_VOICE, "assets/boy.mp3", pitch="+55Hz"))
     asyncio.run(tts(content["girl_line"], GIRL_VOICE, "assets/girl.mp3", pitch="+45Hz"))
 
     print("Voice files ready (clear, native pitch)")
