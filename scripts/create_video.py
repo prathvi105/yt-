@@ -16,15 +16,19 @@ def create_video():
     laugh_dur = get_dur("assets/laugh.mp3")
     total_dur = boy_dur + girl_dur + laugh_dur + 1.5
 
-    subprocess.run([
+  subprocess.run([
         "ffmpeg", "-y",
         "-i", "assets/boy.mp3", "-i", "assets/girl.mp3", "-i", "assets/laugh.mp3",
         "-filter_complex", "[0:a][1:a][2:a]concat=n=3:v=0:a=1[aout]",
         "-map", "[aout]", "assets/combined_audio.mp3"
     ], check=True, capture_output=True)
 
-    boy_text = content["boy_line"].replace("'", "\u2019").replace(":", "\\:")
-    girl_text = content["girl_line"].replace("'", "\u2019").replace(":", "\\:")
+    def escape(t):
+        return (t.replace("\\", "\\\\").replace("'", "\u2019")
+                 .replace(":", "\\:").replace(",", "\\,"))
+
+    boy_text = escape(content["boy_line"])
+    girl_text = escape(content["girl_line"])
     fps = 25
     t1 = boy_dur           # boy talking window
     t2 = boy_dur + girl_dur  # girl talking window ends
