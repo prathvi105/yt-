@@ -24,7 +24,7 @@ def create_video():
         "-i", "assets/boy.mp3", "-i", "assets/girl.mp3", "-i", "assets/laugh.mp3",
         "-filter_complex", "[0:a][1:a][2:a]concat=n=3:v=0:a=1[aout]",
         "-map", "[aout]", "assets/combined_audio.mp3"
-    ], check=True, capture_output=True)
+    ], check=True)
 
     def escape(t):
         return (t.replace("\\", "\\\\").replace("'", "\u2019")
