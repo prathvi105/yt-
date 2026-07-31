@@ -1,0 +1,50 @@
+name: Kuchu Puchu Video Automation
+
+on:
+  workflow_dispatch:      # manual "Run workflow" button
+  schedule:
+    - cron: "0 9 * * *"   # daily 9 AM UTC (~2:30 PM IST)
+
+jobs:
+  create-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Generate content (dialogue + captions)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python scripts/generate_content.py
+
+      - name: Generate character image
+        run: python scripts/generate_image.py
+
+      - name: Generate voice lines
+        run: python scripts/generate_voice.py
+
+      - name: Assemble final video
+        run: python scripts/create_video.py
+
+      - name: Upload to YouTube
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: python scripts/upload_youtube.py
+
+      - name: Upload video as artifact (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-video
+          path: assets/final_video.mp4
