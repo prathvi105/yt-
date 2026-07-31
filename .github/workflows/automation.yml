@@ -21,6 +21,8 @@ jobs:
 
       - name: Install Python deps
         run: pip install -r requirements.txt
+      - name: Create assets folder 
+        run: mkdir -p assets
 
       - name: Generate content (dialogue + captions)
         env:
